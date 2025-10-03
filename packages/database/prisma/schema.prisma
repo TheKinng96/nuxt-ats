@@ -1,0 +1,454 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ORGANIZATIONS & USERS
+// ============================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  forms        Form[]
+  stages       Stage[]
+  candidates   Candidate[]
+  automations  Automation[]
+  interviews   Interview[]
+}
+
+enum UserRole {
+  ADMIN
+  RECRUITER
+  INTERVIEWER
+  VIEWER
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  passwordHash   String
+  role           UserRole @default(VIEWER)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdCandidates  Candidate[]  @relation("CandidateCreator")
+  assignedCandidates Candidate[]  @relation("CandidateAssignee")
+  comments           Comment[]
+  activities         Activity[]
+  interviewsAsHost   Interview[]  @relation("InterviewHost")
+  interviewsAsGuest  Interview[]  @relation("InterviewGuest")
+
+  @@index([organizationId])
+}
+
+// ============================================
+// FORMS & FIELDS
+// ============================================
+
+enum FieldType {
+  TEXT
+  EMAIL
+  PHONE
+  TEXTAREA
+  NUMBER
+  SELECT
+  MULTI_SELECT
+  CHECKBOX
+  RADIO
+  DATE
+  FILE
+  URL
+}
+
+model Form {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String
+  description    String?
+  isActive       Boolean  @default(true)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  fields      FormField[]
+  candidates  Candidate[]
+  submissions Submission[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+model FormField {
+  id          String    @id @default(cuid())
+  formId      String
+  label       String
+  type        FieldType
+  placeholder String?
+  helpText    String?
+  required    Boolean   @default(false)
+  order       Int
+  options     Json? // For SELECT, MULTI_SELECT, RADIO
+  validation  Json? // Custom validation rules
+  showInTable Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@index([formId, order])
+}
+
+// ============================================
+// CANDIDATES & PIPELINE
+// ============================================
+
+enum CandidateStatus {
+  ACTIVE
+  HIRED
+  REJECTED
+  WITHDRAWN
+  ON_HOLD
+}
+
+model Candidate {
+  id             String          @id @default(cuid())
+  email          String
+  name           String
+  phone          String?
+  formId         String
+  currentStageId String?
+  status         CandidateStatus @default(ACTIVE)
+  score          Float?
+  organizationId String
+  createdById    String
+  assignedToId   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  form         Form         @relation(fields: [formId], references: [id], onDelete: Restrict)
+  currentStage Stage?       @relation(fields: [currentStageId], references: [id], onDelete: SetNull)
+  createdBy    User         @relation("CandidateCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  assignedTo   User?        @relation("CandidateAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  submissions    Submission[]
+  stageHistory   CandidateStage[]
+  documents      Document[]
+  aiSummaries    AISummary[]
+  comments       Comment[]
+  activities     Activity[]
+  interviews     Interview[]
+  tags           CandidateTag[]
+
+  @@unique([organizationId, email, formId])
+  @@index([organizationId])
+  @@index([organizationId, currentStageId])
+  @@index([organizationId, status])
+  @@index([assignedToId])
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  candidateId String
+  formId      String
+  data        Json // Dynamic form response data
+  createdAt   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  form      Form      @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([formId])
+}
+
+model Stage {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  color          String?
+  order          Int
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  candidates       Candidate[]
+  candidateHistory CandidateStage[]
+  automations      Automation[]
+
+  @@index([organizationId])
+  @@index([organizationId, order])
+}
+
+model CandidateStage {
+  id          String   @id @default(cuid())
+  candidateId String
+  stageId     String
+  enteredAt   DateTime @default(now())
+  exitedAt    DateTime?
+  duration    Int? // Duration in seconds
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  stage     Stage     @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([stageId])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String?
+  createdAt DateTime @default(now())
+
+  candidates CandidateTag[]
+}
+
+model CandidateTag {
+  candidateId String
+  tagId       String
+  createdAt   DateTime @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([candidateId, tagId])
+  @@index([candidateId])
+  @@index([tagId])
+}
+
+// ============================================
+// DOCUMENTS & AI
+// ============================================
+
+enum DocumentType {
+  RESUME
+  COVER_LETTER
+  PORTFOLIO
+  OTHER
+}
+
+model Document {
+  id          String       @id @default(cuid())
+  candidateId String
+  name        String
+  type        DocumentType
+  url         String
+  s3Key       String
+  mimeType    String
+  size        Int
+  createdAt   DateTime     @default(now())
+
+  candidate   Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  aiSummaries AISummary[]
+
+  @@index([candidateId])
+}
+
+enum AISummaryType {
+  RESUME
+  TRANSCRIPT
+  INTERVIEW_NOTES
+}
+
+model AISummary {
+  id          String        @id @default(cuid())
+  candidateId String
+  documentId  String?
+  type        AISummaryType
+  summary     String
+  extractedData Json? // Structured data extracted by AI
+  createdAt   DateTime      @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  document  Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([documentId])
+}
+
+// ============================================
+// INTERVIEWS
+// ============================================
+
+enum InterviewStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Interview {
+  id             String          @id @default(cuid())
+  title          String
+  candidateId    String
+  hostId         String
+  scheduledAt    DateTime
+  duration       Int // Duration in minutes
+  location       String? // Physical location or video link
+  status         InterviewStatus @default(SCHEDULED)
+  notes          String?
+  organizationId String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  candidate    Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  host         User        @relation("InterviewHost", fields: [hostId], references: [id], onDelete: Restrict)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  participants InterviewParticipant[]
+  transcripts  Transcript[]
+
+  @@index([candidateId])
+  @@index([hostId])
+  @@index([organizationId])
+  @@index([scheduledAt])
+}
+
+model InterviewParticipant {
+  interviewId String
+  userId      String
+  createdAt   DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  user      User      @relation("InterviewGuest", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([interviewId, userId])
+  @@index([interviewId])
+  @@index([userId])
+}
+
+model Transcript {
+  id          String   @id @default(cuid())
+  interviewId String
+  content     String
+  s3Key       String?
+  recordingUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+}
+
+// ============================================
+// AUTOMATION & WORKFLOWS
+// ============================================
+
+enum AutomationTrigger {
+  STAGE_CHANGE
+  FORM_SUBMISSION
+  TIME_BASED
+  MANUAL
+}
+
+enum AutomationActionType {
+  SEND_EMAIL
+  CREATE_NOTIFICATION
+  UPDATE_FIELD
+  ASSIGN_TO_USER
+  ADD_TAG
+  SCHEDULE_INTERVIEW
+}
+
+model Automation {
+  id             String            @id @default(cuid())
+  name           String
+  description    String?
+  trigger        AutomationTrigger
+  triggerStageId String? // For STAGE_CHANGE trigger
+  isActive       Boolean           @default(true)
+  organizationId String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  triggerStage Stage?       @relation(fields: [triggerStageId], references: [id], onDelete: Cascade)
+
+  actions AutomationAction[]
+
+  @@index([organizationId])
+  @@index([triggerStageId])
+}
+
+model AutomationAction {
+  id           String               @id @default(cuid())
+  automationId String
+  type         AutomationActionType
+  config       Json // Action-specific configuration
+  order        Int
+  createdAt    DateTime             @default(now())
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId])
+  @@index([automationId, order])
+}
+
+// ============================================
+// ACTIVITY & COMMENTS
+// ============================================
+
+enum ActivityType {
+  CANDIDATE_CREATED
+  CANDIDATE_UPDATED
+  STAGE_CHANGED
+  DOCUMENT_UPLOADED
+  INTERVIEW_SCHEDULED
+  COMMENT_ADDED
+  EMAIL_SENT
+  AUTOMATION_TRIGGERED
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  candidateId String
+  userId      String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([candidateId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  candidateId String
+  userId      String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([userId])
+}

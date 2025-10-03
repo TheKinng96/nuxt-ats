@@ -1,0 +1,36 @@
+# Nuxt
+.nuxt
+.output
+.data
+.env
+.env.*
+!.env.example
+dist
+
+# Node
+node_modules
+*.log*
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+
+# Database
+*.db
+*.db-journal
+
+# Uploads
+uploads/
+
+# Misc
+.turbo
+.cache
