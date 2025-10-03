@@ -138,7 +138,7 @@ The system uses a comprehensive Prisma schema with the following main entities:
 - **Interviews** - Interview scheduling
 - **Activities** - Audit logs
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architecture documentation.
+See [.claude/ARCHITECTURE.md](./.claude/ARCHITECTURE.md) for detailed architecture documentation.
 
 ### State Management
 - **Pinia** for client-side state management
