@@ -66,12 +66,48 @@ export default {
       pattern: '必要な形式に一致してください',
     },
     form: {
+      labels: {
+        name: '名前',
+        email: 'メールアドレス',
+        password: 'パスワード',
+        organizationName: '組織名',
+      },
       placeholders: {
+        name: '名前を入力',
         email: 'メールアドレスを入力',
         password: 'パスワードを入力',
+        organizationName: '組織名を入力',
         search: '検索...',
         select: 'オプションを選択',
       },
+    },
+  },
+  auth: {
+    login: {
+      title: 'ログイン',
+      subtitle: 'アカウントにログインしてください',
+      submit: 'ログイン',
+      noAccount: 'アカウントをお持ちでない方',
+      register: '新規登録',
+      forgotPassword: 'パスワードをお忘れですか？',
+    },
+    register: {
+      title: '新規登録',
+      subtitle: '新しいアカウントを作成してください',
+      submit: '登録',
+      hasAccount: 'すでにアカウントをお持ちの方',
+      login: 'ログイン',
+      agreement: '登録することで、利用規約とプライバシーポリシーに同意したことになります',
+    },
+    logout: {
+      confirm: 'ログアウトしますか？',
+      success: 'ログアウトしました',
+    },
+    errors: {
+      invalidCredentials: 'メールアドレスまたはパスワードが正しくありません',
+      emailExists: 'このメールアドレスは既に登録されています',
+      unauthorized: '認証が必要です',
+      sessionExpired: 'セッションの有効期限が切れました。再度ログインしてください',
     },
   },
 }
