@@ -12,12 +12,28 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@nuxtjs/tailwindcss',
     '@nuxt/eslint',
-    'shadcn-nuxt'
+    'shadcn-nuxt',
+    '@nuxtjs/i18n'
   ],
 
   shadcn: {
     prefix: '',
     componentDir: './components/ui'
+  },
+
+  i18n: {
+    locales: [
+      {
+        code: 'ja',
+        iso: 'ja-JP',
+        name: '日本語',
+        file: 'ja.ts'
+      }
+    ],
+    langDir: 'locales',
+    defaultLocale: 'ja',
+    strategy: 'no_prefix',
+    vueI18n: './vue-i18n.config.ts'
   },
 
   runtimeConfig: {

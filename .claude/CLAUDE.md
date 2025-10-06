@@ -92,6 +92,146 @@ nuxt-ats/
 - **Stores**: camelCase with 'use' and 'Store' (`useAuthStore`)
 - **Types**: PascalCase (`CandidateListItem`, `FormDefinition`)
 - **API routes**: kebab-case (`/api/candidates/[id].get.ts`)
+- **i18n locale files**: `ComponentName.locale.ja.ts` (always include language code)
+
+## Internationalization (i18n)
+
+### Overview
+- **Language**: Japanese (ja) only
+- **System**: @nuxtjs/i18n with Vue I18n
+- **Pattern**: Hybrid - global translations + component-level translations
+- **TypeScript**: Full autocomplete support for all translation keys
+
+### File Structure
+```
+apps/web/
+├── i18n/locales/           # Global translations
+│   ├── ja.ts              # Central Japanese translations
+│   └── index.ts           # Type exports
+├── pages/
+│   ├── index.vue
+│   └── index.locale.ja.ts # Page-specific translations
+└── components/
+    ├── candidates/
+    │   ├── CandidateList.vue
+    │   └── CandidateList.locale.ja.ts  # Component translations
+    └── ui/                # Shadcn components (no locales needed)
+```
+
+### Global vs Component-Level Translations
+
+**Use Global Translations (`i18n/locales/ja.ts`) for:**
+- Common UI elements (buttons, labels, etc.)
+- Validation messages
+- Error messages
+- Navigation items
+- Status labels
+- Anything reused across multiple components
+
+**Use Component-Level Translations (`ComponentName.locale.ja.ts`) for:**
+- Component-specific content
+- Page-specific headings and descriptions
+- Feature-specific terminology
+- Dynamic content unique to that component
+
+### Creating Component Locale Files
+
+**1. Create locale file next to component:**
+```ts
+// components/candidates/CandidateList.locale.ja.ts
+export default {
+  candidateList: {  // Always namespace under component name
+    title: '候補者一覧',
+    searchPlaceholder: '候補者を検索...',
+    noResults: '候補者が見つかりません'
+  }
+}
+```
+
+**2. Use in component:**
+```vue
+<script setup lang="ts">
+import ja from './CandidateList.locale.ja'
+
+const { t } = useComponentI18n({ messages: { ja } })
+</script>
+
+<template>
+  <div>
+    <h1>{{ t('candidateList.title') }}</h1>
+    <!-- Can also access global translations -->
+    <button>{{ t('common.buttons.save') }}</button>
+  </div>
+</template>
+```
+
+### Import Patterns
+- **Component locales**: `import ja from './ComponentName.locale.ja'`
+- **Global translations**: Auto-imported via Nuxt i18n module
+- **Path aliases**: Use `~` or `@` for app root imports
+- **Composable**: `useComponentI18n` (auto-imported by Nuxt)
+
+### TypeScript Autocomplete
+The system provides full autocomplete for:
+- ✅ Global translation keys (e.g., `common.buttons.save`)
+- ✅ Component-level keys (e.g., `candidateList.title`)
+- ✅ Works in both `<script>` and `<template>` sections
+- ✅ Type-safe with compile-time checking
+
+### Naming Rules
+1. **Locale files**: Always use `.locale.ja.ts` suffix
+2. **Top-level key**: Must match component name in camelCase
+   - Component: `CandidateList.vue` → Key: `candidateList`
+   - Component: `FormBuilder.vue` → Key: `formBuilder`
+3. **Nested keys**: Use descriptive, specific names
+4. **Keep same base name**: `CandidateList.vue` + `CandidateList.locale.ja.ts`
+
+### Best Practices
+- ✅ **Always namespace** component translations under a unique key
+- ✅ **Co-locate** translations with their components
+- ✅ **Use direct export** - no wrapper functions needed
+- ✅ **Keep translations close** to where they're used
+- ✅ **Reuse global** translations when possible
+- ❌ **Don't duplicate** common terms in component locales
+- ❌ **Don't mix** business logic with translation keys
+
+### Common Patterns
+
+**Navigation with translations:**
+```vue
+<Button as-child>
+  <NuxtLink to="/dashboard">
+    {{ t('common.navigation.dashboard') }}
+  </NuxtLink>
+</Button>
+```
+
+**Form labels:**
+```vue
+<FormField v-slot="{ componentField }" name="email">
+  <FormItem>
+    <FormLabel>{{ t('common.form.email') }}</FormLabel>
+    <FormControl>
+      <Input type="email" v-bind="componentField" />
+    </FormControl>
+  </FormItem>
+</FormField>
+```
+
+**Conditional text:**
+```vue
+<p v-if="isEmpty">{{ t('candidateList.noResults') }}</p>
+```
+
+### Troubleshooting
+- **Missing key warning**: Check spelling and namespace
+- **No autocomplete**: Ensure locale file uses direct export (not wrapped)
+- **Type errors**: Verify locale file has correct structure
+- **Keys not showing**: Restart TypeScript server in IDE
+
+### Documentation
+- **Quick Start**: See `apps/web/I18N-QUICK-START.md`
+- **Full Guide**: See `apps/web/I18N.md`
 
 ## Key Architectural Decisions
 
@@ -305,4 +445,4 @@ When in doubt:
 
 **Remember**: This is a living document. Update it as the project evolves and new patterns emerge.
 
-**Last Updated:** 2025-10-03
+**Last Updated:** 2025-10-06
