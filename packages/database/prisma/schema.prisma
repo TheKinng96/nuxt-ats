@@ -29,31 +29,25 @@ model Organization {
   interviews   Interview[]
 }
 
-enum UserRole {
-  ADMIN
-  RECRUITER
-  INTERVIEWER
-  VIEWER
-}
-
+// UserRole: ADMIN, RECRUITER, INTERVIEWER, VIEWER
 model User {
   id             String   @id @default(cuid())
   email          String   @unique
   name           String
   passwordHash   String
-  role           UserRole @default(VIEWER)
+  role           String   @default("VIEWER") // ADMIN, RECRUITER, INTERVIEWER, VIEWER
   organizationId String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  createdCandidates  Candidate[]  @relation("CandidateCreator")
-  assignedCandidates Candidate[]  @relation("CandidateAssignee")
-  comments           Comment[]
-  activities         Activity[]
-  interviewsAsHost   Interview[]  @relation("InterviewHost")
-  interviewsAsGuest  Interview[]  @relation("InterviewGuest")
+  createdCandidates     Candidate[]            @relation("CandidateCreator")
+  assignedCandidates    Candidate[]            @relation("CandidateAssignee")
+  comments              Comment[]
+  activities            Activity[]
+  interviewsAsHost      Interview[]            @relation("InterviewHost")
+  interviewParticipants InterviewParticipant[]
 
   @@index([organizationId])
 }
@@ -62,20 +56,7 @@ model User {
 // FORMS & FIELDS
 // ============================================
 
-enum FieldType {
-  TEXT
-  EMAIL
-  PHONE
-  TEXTAREA
-  NUMBER
-  SELECT
-  MULTI_SELECT
-  CHECKBOX
-  RADIO
-  DATE
-  FILE
-  URL
-}
+// FieldType: TEXT, EMAIL, PHONE, TEXTAREA, NUMBER, SELECT, MULTI_SELECT, CHECKBOX, RADIO, DATE, FILE, URL
 
 model Form {
   id             String   @id @default(cuid())
@@ -98,19 +79,19 @@ model Form {
 }
 
 model FormField {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   formId      String
   label       String
-  type        FieldType
+  type        String // TEXT, EMAIL, PHONE, TEXTAREA, NUMBER, SELECT, MULTI_SELECT, CHECKBOX, RADIO, DATE, FILE, URL
   placeholder String?
   helpText    String?
-  required    Boolean   @default(false)
+  required    Boolean  @default(false)
   order       Int
-  options     Json? // For SELECT, MULTI_SELECT, RADIO
-  validation  Json? // Custom validation rules
-  showInTable Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  options     String? // JSON string for SELECT, MULTI_SELECT, RADIO
+  validation  String? // JSON string for custom validation rules
+  showInTable Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
 
@@ -122,28 +103,22 @@ model FormField {
 // CANDIDATES & PIPELINE
 // ============================================
 
-enum CandidateStatus {
-  ACTIVE
-  HIRED
-  REJECTED
-  WITHDRAWN
-  ON_HOLD
-}
+// CandidateStatus: ACTIVE, HIRED, REJECTED, WITHDRAWN, ON_HOLD
 
 model Candidate {
-  id             String          @id @default(cuid())
+  id             String   @id @default(cuid())
   email          String
   name           String
   phone          String?
   formId         String
   currentStageId String?
-  status         CandidateStatus @default(ACTIVE)
+  status         String   @default("ACTIVE") // ACTIVE, HIRED, REJECTED, WITHDRAWN, ON_HOLD
   score          Float?
   organizationId String
   createdById    String
   assignedToId   String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   form         Form         @relation(fields: [formId], references: [id], onDelete: Restrict)
@@ -151,14 +126,14 @@ model Candidate {
   createdBy    User         @relation("CandidateCreator", fields: [createdById], references: [id], onDelete: Restrict)
   assignedTo   User?        @relation("CandidateAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
 
-  submissions    Submission[]
-  stageHistory   CandidateStage[]
-  documents      Document[]
-  aiSummaries    AISummary[]
-  comments       Comment[]
-  activities     Activity[]
-  interviews     Interview[]
-  tags           CandidateTag[]
+  submissions  Submission[]
+  stageHistory CandidateStage[]
+  documents    Document[]
+  aiSummaries  AISummary[]
+  comments     Comment[]
+  activities   Activity[]
+  interviews   Interview[]
+  tags         CandidateTag[]
 
   @@unique([organizationId, email, formId])
   @@index([organizationId])
@@ -171,7 +146,7 @@ model Submission {
   id          String   @id @default(cuid())
   candidateId String
   formId      String
-  data        Json // Dynamic form response data
+  data        String // JSON string for dynamic form response data
   createdAt   DateTime @default(now())
 
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
@@ -242,23 +217,18 @@ model CandidateTag {
 // DOCUMENTS & AI
 // ============================================
 
-enum DocumentType {
-  RESUME
-  COVER_LETTER
-  PORTFOLIO
-  OTHER
-}
+// DocumentType: RESUME, COVER_LETTER, PORTFOLIO, OTHER
 
 model Document {
-  id          String       @id @default(cuid())
+  id          String   @id @default(cuid())
   candidateId String
   name        String
-  type        DocumentType
+  type        String // RESUME, COVER_LETTER, PORTFOLIO, OTHER
   url         String
   s3Key       String
   mimeType    String
   size        Int
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime @default(now())
 
   candidate   Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   aiSummaries AISummary[]
@@ -266,20 +236,16 @@ model Document {
   @@index([candidateId])
 }
 
-enum AISummaryType {
-  RESUME
-  TRANSCRIPT
-  INTERVIEW_NOTES
-}
+// AISummaryType: RESUME, TRANSCRIPT, INTERVIEW_NOTES
 
 model AISummary {
-  id          String        @id @default(cuid())
-  candidateId String
-  documentId  String?
-  type        AISummaryType
-  summary     String
-  extractedData Json? // Structured data extracted by AI
-  createdAt   DateTime      @default(now())
+  id            String   @id @default(cuid())
+  candidateId   String
+  documentId    String?
+  type          String // RESUME, TRANSCRIPT, INTERVIEW_NOTES
+  summary       String
+  extractedData String? // JSON string for structured data extracted by AI
+  createdAt     DateTime @default(now())
 
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   document  Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
@@ -292,29 +258,24 @@ model AISummary {
 // INTERVIEWS
 // ============================================
 
-enum InterviewStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
+// InterviewStatus: SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
 
 model Interview {
-  id             String          @id @default(cuid())
+  id             String   @id @default(cuid())
   title          String
   candidateId    String
   hostId         String
   scheduledAt    DateTime
   duration       Int // Duration in minutes
   location       String? // Physical location or video link
-  status         InterviewStatus @default(SCHEDULED)
+  status         String   @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
   notes          String?
   organizationId String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  candidate    Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  host         User        @relation("InterviewHost", fields: [hostId], references: [id], onDelete: Restrict)
+  candidate    Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  host         User      @relation("InterviewHost", fields: [hostId], references: [id], onDelete: Restrict)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   participants InterviewParticipant[]
@@ -332,7 +293,7 @@ model InterviewParticipant {
   createdAt   DateTime @default(now())
 
   interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-  user      User      @relation("InterviewGuest", fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([interviewId, userId])
   @@index([interviewId])
@@ -357,32 +318,19 @@ model Transcript {
 // AUTOMATION & WORKFLOWS
 // ============================================
 
-enum AutomationTrigger {
-  STAGE_CHANGE
-  FORM_SUBMISSION
-  TIME_BASED
-  MANUAL
-}
-
-enum AutomationActionType {
-  SEND_EMAIL
-  CREATE_NOTIFICATION
-  UPDATE_FIELD
-  ASSIGN_TO_USER
-  ADD_TAG
-  SCHEDULE_INTERVIEW
-}
+// AutomationTrigger: STAGE_CHANGE, FORM_SUBMISSION, TIME_BASED, MANUAL
+// AutomationActionType: SEND_EMAIL, CREATE_NOTIFICATION, UPDATE_FIELD, ASSIGN_TO_USER, ADD_TAG, SCHEDULE_INTERVIEW
 
 model Automation {
-  id             String            @id @default(cuid())
+  id             String   @id @default(cuid())
   name           String
   description    String?
-  trigger        AutomationTrigger
+  trigger        String // STAGE_CHANGE, FORM_SUBMISSION, TIME_BASED, MANUAL
   triggerStageId String? // For STAGE_CHANGE trigger
-  isActive       Boolean           @default(true)
+  isActive       Boolean  @default(true)
   organizationId String
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   triggerStage Stage?       @relation(fields: [triggerStageId], references: [id], onDelete: Cascade)
@@ -394,12 +342,12 @@ model Automation {
 }
 
 model AutomationAction {
-  id           String               @id @default(cuid())
+  id           String   @id @default(cuid())
   automationId String
-  type         AutomationActionType
-  config       Json // Action-specific configuration
+  type         String // SEND_EMAIL, CREATE_NOTIFICATION, UPDATE_FIELD, ASSIGN_TO_USER, ADD_TAG, SCHEDULE_INTERVIEW
+  config       String // JSON string for action-specific configuration
   order        Int
-  createdAt    DateTime             @default(now())
+  createdAt    DateTime @default(now())
 
   automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
 
@@ -411,24 +359,15 @@ model AutomationAction {
 // ACTIVITY & COMMENTS
 // ============================================
 
-enum ActivityType {
-  CANDIDATE_CREATED
-  CANDIDATE_UPDATED
-  STAGE_CHANGED
-  DOCUMENT_UPLOADED
-  INTERVIEW_SCHEDULED
-  COMMENT_ADDED
-  EMAIL_SENT
-  AUTOMATION_TRIGGERED
-}
+// ActivityType: CANDIDATE_CREATED, CANDIDATE_UPDATED, STAGE_CHANGED, DOCUMENT_UPLOADED, INTERVIEW_SCHEDULED, COMMENT_ADDED, EMAIL_SENT, AUTOMATION_TRIGGERED
 
 model Activity {
-  id          String       @id @default(cuid())
-  type        ActivityType
+  id          String   @id @default(cuid())
+  type        String // CANDIDATE_CREATED, CANDIDATE_UPDATED, STAGE_CHANGED, DOCUMENT_UPLOADED, INTERVIEW_SCHEDULED, COMMENT_ADDED, EMAIL_SENT, AUTOMATION_TRIGGERED
   candidateId String
   userId      String?
-  metadata    Json?
-  createdAt   DateTime     @default(now())
+  metadata    String? // JSON string for additional metadata
+  createdAt   DateTime @default(now())
 
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)

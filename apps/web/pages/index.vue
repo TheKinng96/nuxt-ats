@@ -14,12 +14,18 @@ definePageMeta({
         AI-Powered Applicant Tracking System
       </p>
       <div class="flex gap-4 justify-center">
-        <UButton to="/dashboard" size="lg">
+        <NuxtLink
+          to="/dashboard"
+          class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+        >
           Dashboard
-        </UButton>
-        <UButton to="/login" variant="outline" size="lg">
+        </NuxtLink>
+        <NuxtLink
+          to="/login"
+          class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+        >
           Login
-        </UButton>
+        </NuxtLink>
       </div>
     </div>
   </div>

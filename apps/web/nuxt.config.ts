@@ -3,6 +3,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-07-09',
   devtools: { enabled: true },
 
+  experimental: {
+    buildCache: false
+  },
+
   modules: [
     '@pinia/nuxt',
     '@vueuse/nuxt',
