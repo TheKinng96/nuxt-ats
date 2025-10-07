@@ -2,30 +2,45 @@
 import { ref, computed } from 'vue'
 import * as yup from 'yup'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useI18n } from 'vue-i18n'
+import ja from './index.locale.ja'
 
-const { t } = useI18n()
+definePageMeta({
+  middleware: 'guest'
+})
+
+const { t } = useComponentI18n({ messages: { ja } })
 const authStore = useAuthStore()
 const router = useRouter()
 
 // Form state
 const formData = ref({
+  name: '',
   email: '',
   password: '',
+  organizationName: '',
 })
 
 const errors = ref<Record<string, string>>({})
 const serverError = ref('')
 
 // Validation schema
-const loginSchema = yup.object({
+const registerSchema = yup.object({
+  name: yup
+    .string()
+    .required(t('common.validation.required'))
+    .min(2, t('common.validation.minLength', { min: 2 })),
   email: yup
     .string()
     .required(t('common.validation.required'))
     .email(t('common.validation.email')),
   password: yup
     .string()
-    .required(t('common.validation.required')),
+    .required(t('common.validation.required'))
+    .min(8, t('common.validation.minLength', { min: 8 })),
+  organizationName: yup
+    .string()
+    .required(t('common.validation.required'))
+    .min(2, t('common.validation.minLength', { min: 2 })),
 })
 
 // Submit handler
@@ -35,13 +50,13 @@ const handleSubmit = async () => {
 
   try {
     // Validate form
-    await loginSchema.validate(formData.value, { abortEarly: false })
+    await registerSchema.validate(formData.value, { abortEarly: false })
 
     // Call API
-    await authStore.login(formData.value.email, formData.value.password)
+    await authStore.register(formData.value)
 
     // Redirect to dashboard
-    await router.push('/')
+    await navigateTo('/dashboard')
   } catch (error) {
     if (error instanceof yup.ValidationError) {
       // Handle validation errors
@@ -60,7 +75,7 @@ const handleSubmit = async () => {
       }
     } else {
       // Handle other errors
-      serverError.value = t('auth.errors.invalidCredentials')
+      serverError.value = t('register.errors.emailExists')
     }
   }
 }
@@ -73,10 +88,10 @@ const isLoading = computed(() => authStore.loading)
     <Card class="w-full max-w-md">
       <CardHeader class="space-y-1">
         <CardTitle class="text-2xl font-bold text-center">
-          {{ t('auth.login.title') }}
+          {{ t('register.title') }}
         </CardTitle>
         <CardDescription class="text-center">
-          {{ t('auth.login.subtitle') }}
+          {{ t('register.subtitle') }}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -87,6 +102,22 @@ const isLoading = computed(() => authStore.loading)
             class="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
           >
             {{ serverError }}
+          </div>
+
+          <!-- Name Field -->
+          <div class="space-y-2">
+            <Label for="name">{{ t('common.form.labels.name') }}</Label>
+            <Input
+              id="name"
+              v-model="formData.name"
+              type="text"
+              :placeholder="t('common.form.placeholders.name')"
+              :class="{ 'border-destructive': errors.name }"
+              :disabled="isLoading"
+            />
+            <p v-if="errors.name" class="text-sm text-destructive">
+              {{ errors.name }}
+            </p>
           </div>
 
           <!-- Email Field -->
@@ -121,11 +152,20 @@ const isLoading = computed(() => authStore.loading)
             </p>
           </div>
 
-          <!-- Forgot Password Link -->
-          <div class="text-right">
-            <NuxtLink to="/forgot-password" class="text-sm font-medium text-primary hover:underline">
-              {{ t('auth.login.forgotPassword') }}
-            </NuxtLink>
+          <!-- Organization Name Field -->
+          <div class="space-y-2">
+            <Label for="organizationName">{{ t('common.form.labels.organizationName') }}</Label>
+            <Input
+              id="organizationName"
+              v-model="formData.organizationName"
+              type="text"
+              :placeholder="t('common.form.placeholders.organizationName')"
+              :class="{ 'border-destructive': errors.organizationName }"
+              :disabled="isLoading"
+            />
+            <p v-if="errors.organizationName" class="text-sm text-destructive">
+              {{ errors.organizationName }}
+            </p>
           </div>
 
           <!-- Submit Button -->
@@ -134,16 +174,21 @@ const isLoading = computed(() => authStore.loading)
             class="w-full"
             :disabled="isLoading"
           >
-            {{ isLoading ? t('common.messages.loading') : t('auth.login.submit') }}
+            {{ isLoading ? t('common.messages.loading') : t('register.submitButton') }}
           </Button>
+
+          <!-- Agreement Text -->
+          <p class="text-xs text-center text-muted-foreground">
+            {{ t('register.agreement') }}
+          </p>
         </form>
 
-        <!-- Register Link -->
+        <!-- Login Link -->
         <div class="mt-6 text-center text-sm">
-          <span class="text-muted-foreground">{{ t('auth.login.noAccount') }}</span>
+          <span class="text-muted-foreground">{{ t('register.hasAccount') }}</span>
           {{ ' ' }}
-          <NuxtLink to="/register" class="font-medium text-primary hover:underline">
-            {{ t('auth.login.register') }}
+          <NuxtLink to="/auth/login" class="font-medium text-primary hover:underline">
+            {{ t('register.loginLink') }}
           </NuxtLink>
         </div>
       </CardContent>

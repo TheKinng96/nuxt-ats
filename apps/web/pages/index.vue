@@ -2,7 +2,8 @@
 import ja from './index.locale.ja'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: 'guest'
 })
 
 // Use component-level i18n with autocomplete support
@@ -27,7 +28,7 @@ const { t } = useComponentI18n({ messages: { ja } })
           {{ t('home.buttons.dashboard') }}
         </NuxtLink>
         <NuxtLink
-          to="/login"
+          to="/auth/login"
           class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
         >
           {{ t('home.buttons.login') }}
