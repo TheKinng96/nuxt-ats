@@ -3,10 +3,9 @@
 ## 🚀 Current Sprint
 
 ### High Priority
-- [ ] Create basic layouts and navigation components
-- [ ] Initialize database and run first migration
-- [ ] Set up authentication system foundation
-- [ ] Create dashboard layout with sidebar
+- [ ] Start Form Builder development (Phase 2)
+- [ ] Create organization settings page
+- [ ] Implement user invitation system
 
 ### Recently Completed
 - [x] Set up monorepo structure
@@ -15,32 +14,46 @@
 - [x] Set up project documentation
 - [x] Implement Japanese i18n with component-level translations
 - [x] Add i18n documentation and guidelines to CLAUDE.md
+- [x] Initialize database and run first migration
+- [x] Set up authentication system foundation (JWT, middleware)
+- [x] Create authentication pages (login/register with component-level i18n)
+- [x] Set up Pinia stores for state management (useAuthStore)
+- [x] Organize pages into logical folder structure
+- [x] Create basic dashboard page with user info display
+- [x] Implement auth and guest middleware for route protection
+- [x] Fix database connection and path configuration
+- [x] Create dashboard layout with sidebar navigation
+- [x] Build dashboard layout component with collapsible sidebar
+- [x] Add navigation menu with all main sections
+- [x] Implement user profile section in sidebar
+- [x] Create placeholder pages for main features (candidates, forms, pipeline, interviews, settings)
+- [x] Make dashboard fully responsive for mobile
+- [x] Fix app.vue to use NuxtLayout wrapper
 
 ### Next Up
-- [ ] Create reusable Button component with i18n
-- [ ] Build main layout with navigation (using i18n)
-- [ ] Create authentication pages (login/register)
-- [ ] Set up Pinia stores for state management
-- [ ] Run Prisma migrations and seed initial data
+- [ ] Implement role-based navigation visibility
+- [ ] Add organization settings page with edit functionality
+- [ ] Build form builder UI (drag-and-drop)
 
 ## 📋 Feature Development Backlog
 
-### Phase 1: Core Setup & Auth (Week 1-2)
-- [ ] User authentication system
-  - [ ] Login/Register pages
-  - [ ] JWT token handling
-  - [ ] Password hashing with bcrypt
-  - [ ] Auth middleware
-  - [ ] Session management
+### Phase 1: Core Setup & Auth (Week 1-2) ✅
+- [x] User authentication system
+  - [x] Login/Register pages (with component-level i18n)
+  - [x] JWT token handling (HTTP-only cookies)
+  - [x] Password hashing with bcrypt
+  - [x] Auth middleware (auth.ts and guest.ts)
+  - [x] Session management (via authStore)
 - [ ] Organization setup
-  - [ ] Create organization flow
+  - [x] Create organization flow (during registration)
   - [ ] Organization settings page
   - [ ] User invitation system
-- [ ] Basic layouts and navigation
-  - [ ] Dashboard layout
-  - [ ] Sidebar navigation
-  - [ ] User profile dropdown
-  - [ ] Responsive mobile menu
+- [x] Basic layouts and navigation
+  - [x] Dashboard layout with sidebar
+  - [x] Sidebar navigation component
+  - [x] User profile section in sidebar
+  - [x] Responsive mobile menu
+  - [x] Placeholder pages for all main sections
 
 ### Phase 2: Form Builder (Week 3-4)
 - [ ] Form builder UI
@@ -235,4 +248,4 @@
 
 ---
 
-**Last Updated:** 2025-10-06
+**Last Updated:** 2025-10-07 (Phase 1 Core Setup & Auth completed! 🎉)

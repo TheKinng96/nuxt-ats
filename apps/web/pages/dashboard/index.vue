@@ -3,32 +3,24 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import ja from './index.locale.ja'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: 'auth',
+  layout: 'dashboard',
 })
 
 const { t } = useComponentI18n({ messages: { ja } })
 const authStore = useAuthStore()
-
-const handleLogout = async () => {
-  await authStore.logout()
-  navigateTo('/auth/login')
-}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-gray-900">{{ t('dashboard.title') }}</h1>
-        <Button @click="handleLogout" variant="outline">
-          {{ t('dashboard.logoutButton') }}
-        </Button>
-      </div>
-    </header>
+  <div class="p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">{{ t('dashboard.title') }}</h1>
+      <p class="mt-2 text-gray-600">{{ t('dashboard.welcome', { name: authStore.user?.name }) }}</p>
+    </div>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Content -->
+    <div class="max-w-7xl">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- User Information Card -->
         <Card>
@@ -129,6 +121,6 @@ const handleLogout = async () => {
           </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
   </div>
 </template>

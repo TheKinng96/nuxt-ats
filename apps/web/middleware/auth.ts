@@ -7,12 +7,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       await authStore.fetchUser()
     } catch (error) {
       // User is not authenticated
-      return navigateTo('/login')
+      return navigateTo('/auth/login')
     }
   }
 
   // User is authenticated
   if (!authStore.user) {
-    return navigateTo('/login')
+    return navigateTo('/auth/login')
   }
 })

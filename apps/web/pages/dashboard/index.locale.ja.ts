@@ -1,6 +1,7 @@
 export default {
   dashboard: {
     title: 'ダッシュボード',
+    welcome: 'ようこそ、{name}さん',
     logoutButton: 'ログアウト',
     userInfo: {
       title: 'ユーザー情報',
