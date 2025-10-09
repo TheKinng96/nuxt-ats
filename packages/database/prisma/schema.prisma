@@ -63,6 +63,7 @@ model Form {
   name           String
   slug           String
   description    String?
+  headerImage    String? // URL or path to header image
   isActive       Boolean  @default(true)
   organizationId String
   createdAt      DateTime @default(now())

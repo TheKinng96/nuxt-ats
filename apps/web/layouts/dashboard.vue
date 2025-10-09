@@ -196,5 +196,8 @@ const isActiveRoute = (path: string) => {
     >
       <slot />
     </main>
+
+    <!-- Toast notifications -->
+    <Toast />
   </div>
 </template>
