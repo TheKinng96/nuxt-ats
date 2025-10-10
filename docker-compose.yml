@@ -1,0 +1,55 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ats-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-ats_db}
+      POSTGRES_USER: ${DB_USER:-ats_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ats_password}
+    volumes:
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Expose PostgreSQL on port 5432
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - ats-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ats_user} -d ${DB_NAME:-ats_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ATS API (Optional - uncomment when ready to containerize)
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: packages/api/Dockerfile
+  #   container_name: ats-api
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   environment:
+  #     DATABASE_URL: postgresql://${DB_USER:-ats_user}:${DB_PASSWORD:-ats_password}@postgres:5432/${DB_NAME:-ats_db}
+  #     JWT_SECRET: ${JWT_SECRET}
+  #     NODE_ENV: ${NODE_ENV:-development}
+  #     PORT: ${API_PORT:-3001}
+  #   ports:
+  #     - "${API_PORT:-3001}:3001"
+  #   networks:
+  #     - ats-network
+  #   volumes:
+  #     # Mount source code for development (comment out in production)
+  #     - ./packages/api/src:/app/packages/api/src
+  #     - ./packages/database:/app/packages/database
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ats-network:
+    driver: bridge

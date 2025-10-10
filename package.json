@@ -4,15 +4,19 @@
   "version": "1.0.0",
   "description": "AI-powered Applicant Tracking System",
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
-    "preview": "pnpm --filter web preview",
+    "dev": "pnpm --filter api dev",
+    "start": "pnpm --filter api start",
+    "start:dev": "pnpm --filter api start:dev",
+    "start:prod": "pnpm --filter api start:prod",
+    "build": "pnpm --filter api build",
     "db:generate": "pnpm --filter database db:generate",
     "db:push": "pnpm --filter database db:push",
     "db:migrate": "pnpm --filter database db:migrate",
     "db:studio": "pnpm --filter database db:studio",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
     "lint": "pnpm -r lint",
-    "type-check": "pnpm -r type-check"
+    "test": "pnpm --filter api test"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
